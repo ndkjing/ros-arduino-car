@@ -59,37 +59,39 @@ void PS2_Ctrol(void);
 void show_value(void);
 
 /////////编码电机输入///////
-//右一电机
+//右一电机   19号对应中断4
 #define pin_right_1A 19			//A相
 #define pin_right_1B 37		//B相
-//右二电机
-#define pin_right_2A 19			//A相
-#define pin_right_2B 37		//B相
 
-//左一电机
-#define pin_left_1A 19			//A相
-#define pin_left_1B 37		//B相
-//左二电机
-#define pin_left_2A 19			//A相
-#define pin_left_2B 37		//B相
+//右二电机  18号对应中断5
+#define pin_right_2A 18			//A相
+#define pin_right_2B 39		//B相
+
+//左一电机  21号对应中断2
+#define pin_left_1A 21			//A相
+#define pin_left_1B 38		//B相
+
+//左二电机  20号对应中断3
+#define pin_left_2A 20			//A相
+#define pin_left_2B 36		//B相
 
 
 volatile long m[4] = {0,0, 0, 0};
 int pps[4] = {0,0,0,0};
 float velocity[4] = {0, 0, 0, 0};
-int t = 500;
+int t = 100;
 
 void count_right_1() 
 {
   if (digitalRead(pin_right_1A) == LOW) 
   {
-    if (digitalRead(pin_right_1B) == HIGH) pps[0]++;
-    else if (digitalRead(pin_right_1B) == LOW) pps[0]--;
+    if (digitalRead(pin_right_1B) == HIGH) pps[0]--;
+    else if (digitalRead(pin_right_1B) == LOW) pps[0]++;
   }
   else 
   {
-    if (digitalRead(pin_right_1B) == HIGH) pps[0]--;
-    else if (digitalRead(pin_right_1B) == LOW) pps[0]++;
+    if (digitalRead(pin_right_1B) == HIGH) pps[0]++;
+    else if (digitalRead(pin_right_1B) == LOW) pps[0]--;
   }
 }
 
@@ -97,61 +99,68 @@ void count_right_2()
 {
   if (digitalRead(pin_right_2A) == LOW) 
   {
-    if (digitalRead(pin_right_2B) == HIGH) pps[1]++;
-    else if (digitalRead(pin_right_1B) == LOW) pps[0]--;
+    if (digitalRead(pin_right_2B) == HIGH) pps[1]--;
+    else if (digitalRead(pin_right_2B) == LOW) pps[1]++;
   } 
   else 
   {
-    if (digitalRead(pin_right_1B) == HIGH) pps[1]--;
-    else if (digitalRead(pin_right_1B) == LOW) pps[0]++;
+    if (digitalRead(pin_right_2B) == HIGH) pps[1]++;
+    else if (digitalRead(pin_right_2B) == LOW) pps[1]--;
   }
 }
 
 void count_left_1() 
 {
-  if (digitalRead(pin_right_1A) == LOW) 
+  if (digitalRead(pin_left_1A) == LOW) 
   {
-    if (digitalRead(pin_right_1B) == HIGH) pps[0]++;
-    else if (digitalRead(pin_right_1B) == LOW) pps[0]--;
+    if (digitalRead(pin_left_1B) == HIGH) pps[2]++;
+    else if (digitalRead(pin_left_1B) == LOW) pps[2]--;
   } 
   else
   {
-    if (digitalRead(pin_right_1B) == HIGH) pps[0]--;
-    else if (digitalRead(pin_right_1B) == LOW) pps[0]++;
+    if (digitalRead(pin_left_1B) == HIGH) pps[2]--;
+    else if (digitalRead(pin_left_1B) == LOW) pps[2]++;
   }
 }
 
 void count_left_2() 
 {
-  if (digitalRead(pin_right_1A) == LOW) 
+  if (digitalRead(pin_left_2A) == LOW) 
   {
-    if (digitalRead(pin_right_1B) == HIGH) pps[1]++;
-    else if (digitalRead(pin_right_1B) == LOW) pps[0]--;
+    if (digitalRead(pin_left_2B) == HIGH) pps[3]++;
+    else if (digitalRead(pin_left_2B) == LOW) pps[3]--;
   } 
   else 
   {
-    if (digitalRead(pin_right_1B) == HIGH) pps[1]--;
-    else if (digitalRead(pin_right_1B) == LOW) pps[0]++;
+    if (digitalRead(pin_left_2B) == HIGH) pps[3]--;
+    else if (digitalRead(pin_left_2B) == LOW) pps[3]++;
   }
 }
 
 void SpeedDetection() 
 {
+  detachInterrupt(2);
+  detachInterrupt(3);
   detachInterrupt(4);
+  detachInterrupt(5);
   for(int i=0;i<4;i++)
   {
-    float rpm=int(pps[i]/37.4); 
-    Serial.print("M:   ");
+    float rpm=int(pps[i]); 
+    Serial.print("  M: ");
+    Serial.print(i);
+    Serial.print("   ");
+    Serial.print(rpm);
     //    Serial.print(i + 1);
     //    Serial.print(": ");
     //    Serial.print(velocity[i]);
     //    Serial.print("r/s ");
-    Serial.print(rpm);
-
     pps[i] = 0;
   }
-
-  attachInterrupt(4, count_left_1, CHANGE);
+  Serial.println(" ");
+    attachInterrupt(2, count_left_1, HIGH);
+  attachInterrupt(3, count_left_2, HIGH);
+  attachInterrupt(4, count_right_1, HIGH);
+  attachInterrupt(5, count_right_2, HIGH);
 }
 
 
@@ -378,6 +387,7 @@ void setup()   {
   // char error;
   Serial.begin(9600);        //开启串口，波特率9600
   error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, false, false);//PS2控制
+
   // 编码器获取
   pinMode(pin_left_1A, INPUT);
   pinMode(pin_left_1B, INPUT);
@@ -388,7 +398,10 @@ void setup()   {
   pinMode(pin_right_2A, INPUT);
   pinMode(pin_right_2B, INPUT);
 
-  attachInterrupt(4, count_left_1, HIGH);
+  attachInterrupt(2, count_left_1, HIGH);
+  attachInterrupt(3, count_left_2, HIGH);
+  attachInterrupt(4, count_right_1, HIGH);
+  attachInterrupt(5, count_right_2, HIGH);
   MsTimer2::set(t, SpeedDetection);
   MsTimer2::start();
 
@@ -508,7 +521,7 @@ void loop() {
     //    case enDOWNRIGHT: downright(); break;
     default: break;
   }
-  delay(500);
+  delay(50);
   //  switch (g_servostate)
   //  {
   //    case 0: if (temp != 0) {
