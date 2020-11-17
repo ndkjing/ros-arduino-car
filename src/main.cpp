@@ -1,3 +1,5 @@
+#ifdef 0
+
 #include <PS2X_lib.h>        //PS2手柄
 #include "Arduino.h"
 #include<MsTimer2.h>     //定时器
@@ -174,6 +176,20 @@ void setup()   {
   // char error;
   Serial.begin(57600);        //开启串口，波特率9600
   error = ps2x.config_gamepad(PS2_CLK, PS2_CMD, PS2_SEL, PS2_DAT, false, false);//PS2控制
+  
+  // 输出初始化
+  pinMode(pinEnable_1,OUTPUT);
+  pinMode(pinIN1_1, OUTPUT);
+  pinMode(pinIN2_1, OUTPUT);
+  pinMode(pinEnable_2,OUTPUT);
+  pinMode(pinIN1_2, OUTPUT);
+  pinMode(pinIN2_2, OUTPUT);
+  pinMode(pinEnable_3,OUTPUT);
+  pinMode(pinIN1_3, OUTPUT);
+  pinMode(pinIN2_3, OUTPUT);
+  pinMode(pinEnable_4,OUTPUT);
+  pinMode(pinIN1_4, OUTPUT);
+  pinMode(pinIN2_4, OUTPUT);
 
   // 编码器获取
   pinMode(pin_encoder1_a, INPUT);
@@ -256,8 +272,8 @@ void loop() {
     else  Serial.println("  KEY_RELEASE");
   }
   //使用手柄进行控制
-  // PS2_Ctrol();
-  // move(g_carstate,100);
+  PS2_Ctrol();
+  move(g_carstate,200);
   nh.spinOnce();
   get_speed();
   if((millis()-lastMilli) >= LOOPTIME)   
@@ -879,3 +895,6 @@ void go315(uint8_t pwm_val) //   315度前进
   stop2();
   forward4(pwm_val);
 }
+
+
+#endif
